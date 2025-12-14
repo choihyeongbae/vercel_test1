@@ -1,38 +1,63 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>씨네매치 - 코사인 유사도 추천</title>
-    
-    <!-- Tailwind CSS -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineMatch AI - 취향 분석 영화 추천</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- React & ReactDOM (UMD) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel (for JSX) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind Config -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: { sans: ['Inter', 'sans-serif'] },
-            colors: { gray: { 900: '#111827', 800: '#1f2937', 700: '#374151' } }
+            fontFamily: {
+              sans: ['Pretendard', 'sans-serif'],
+            },
+            colors: {
+              background: '#09090b',
+              surface: '#18181b',
+              primary: '#6366f1',
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'slide-up': 'slideUp 0.5s ease-out forwards',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
           }
         }
       }
     </script>
     <style>
-      body { background-color: #0f1014; color: #e5e7eb; }
+      body {
+        background-color: #09090b;
+        color: #e4e4e7;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #18181b; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #3f3f46; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #52525b; 
+      }
     </style>
-<script type="importmap">
+  <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@^19.2.3",
@@ -44,285 +69,8 @@
 }
 </script>
 </head>
-<body>
+  <body>
     <div id="root"></div>
-
-    <script type="text/babel">
-      const { useState, useMemo, useEffect } = React;
-
-      // --- ICONS (SVG) ---
-      const Film = (props) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 3v18" /><path d="M3 7.5h4" /><path d="M3 12h18" /><path d="M3 16.5h4" /><path d="M17 3v18" /><path d="M17 7.5h4" /><path d="M17 16.5h4" /></svg>
-      );
-      const Brain = (props) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" /><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" /><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" /><path d="M17.599 6.5a3 3 0 0 0 .399-1.375" /><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" /><path d="M3.477 10.896a4 4 0 0 1 .585-.396" /><path d="M19.938 10.5a4 4 0 0 1 .585.396" /><path d="M6 18a4 4 0 0 1-1.97-3.284" /><path d="M17.97 14.716A4 4 0 0 1 16 18" /></svg>
-      );
-      const Info = (props) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
-      );
-      const Github = (props) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36.5-7.5 2-1.5-2-5.5-2-7.5 2-1.15 1.5-1.15 4 0 5.5-.7 1-.95 2.25-.85 3.5 0 3.5 3 5.5 6 5.5a4.8 4.8 0 0 0-1 3.5v4" /><path d="M9 18c-4.51 2-5-2-7-2" /></svg>
-      );
-
-      // --- MATH UTILS ---
-      const dotProduct = (vecA, vecB) => (vecA.x * vecB.x) + (vecA.y * vecB.y) + (vecA.z * vecB.z);
-      const magnitude = (vec) => Math.sqrt((vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z));
-      const cosineSimilarity = (vecA, vecB) => {
-        const dot = dotProduct(vecA, vecB);
-        const magA = magnitude(vecA);
-        const magB = magnitude(vecB);
-        if (magA === 0 || magB === 0) return 0;
-        return dot / (magA * magB);
-      };
-
-      // --- DATA ---
-      const m = (id, title, year, x, y, z, genres) => ({ id, title, year, vector: { x, y, z }, genres });
-      const REAL_MOVIES = [
-        m(1, "그랜드 부다페스트 호텔", 2014, 8, 6, 7, ["코미디", "드라마"]),
-        m(2, "매드맥스: 분노의 도로", 2015, 4, 10, 5, ["액션", "SF"]),
-        m(3, "컨택트 (Arrival)", 2016, 5, 4, 9, ["SF", "드라마"]),
-        m(4, "패딩턴 2", 2017, 10, 6, 4, ["가족", "코미디"]),
-        m(5, "조커", 2019, 1, 7, 6, ["드라마", "범죄"]),
-        m(6, "기생충", 2019, 3, 7, 9, ["스릴러", "드라마"]),
-        m(7, "어벤져스: 엔드게임", 2019, 6, 9, 5, ["액션", "SF"]),
-        m(8, "라라랜드", 2016, 7, 6, 6, ["로맨스", "뮤지컬"]),
-        m(9, "쉰들러 리스트", 1993, 1, 3, 8, ["전기", "역사"]),
-        m(10, "펄프 픽션", 1994, 4, 7, 8, ["범죄", "드라마"]),
-        m(11, "센과 치히로의 행방불명", 2001, 7, 5, 8, ["애니메이션", "판타지"]),
-        m(12, "다크 나이트", 2008, 2, 9, 7, ["액션", "범죄"]),
-        m(13, "포레스트 검프", 1994, 8, 5, 5, ["드라마", "로맨스"]),
-        m(14, "인셉션", 2010, 4, 8, 10, ["SF", "액션"]),
-        m(15, "행오버", 2009, 8, 7, 2, ["코미디"]),
-        m(16, "겟 아웃", 2017, 3, 7, 8, ["공포", "미스터리"]),
-        m(17, "토이 스토리", 1995, 9, 6, 3, ["애니메이션", "가족"]),
-        m(18, "매트릭스", 1999, 3, 9, 8, ["SF", "액션"]),
-        m(19, "이터널 선샤인", 2004, 5, 4, 10, ["로맨스", "SF"]),
-        m(20, "존 윅", 2014, 3, 9, 3, ["액션", "스릴러"]),
-        m(21, "비포 선라이즈", 1995, 7, 2, 8, ["로맨스", "드라마"]),
-        m(22, "블레이드 러너 2049", 2017, 2, 5, 9, ["SF", "미스터리"]),
-        m(23, "나이브스 아웃", 2019, 6, 6, 7, ["미스터리", "코미디"]),
-        m(24, "유전", 2018, 1, 5, 8, ["공포", "드라마"]),
-        m(25, "업 (Up)", 2009, 8, 6, 5, ["애니메이션", "모험"]),
-        m(26, "문라이트", 2016, 4, 3, 9, ["드라마"]),
-        m(27, "듄", 2021, 3, 6, 8, ["SF", "모험"]),
-        m(28, "슈퍼배드", 2007, 8, 6, 3, ["코미디"]),
-        m(29, "콰이어트 플레이스", 2018, 3, 8, 5, ["공포", "SF"]),
-        m(30, "인터스텔라", 2014, 5, 7, 9, ["SF", "모험"]),
-        m(31, "코코", 2017, 8, 6, 6, ["애니메이션", "판타지"]),
-        m(32, "파이트 클럽", 1999, 2, 8, 8, ["드라마"]),
-        m(33, "금발이 너무해", 2001, 9, 5, 3, ["코미디", "로맨스"]),
-        m(34, "샤이닝", 1980, 2, 6, 8, ["공포"]),
-        m(35, "타이타닉", 1997, 5, 7, 5, ["로맨스", "드라마"]),
-        m(36, "좋은 친구들", 1990, 3, 7, 7, ["전기", "범죄"]),
-        m(37, "아멜리에", 2001, 9, 4, 7, ["코미디", "로맨스"]),
-        m(38, "위플래쉬", 2014, 3, 9, 7, ["드라마", "음악"]),
-        m(39, "이웃집 토토로", 1988, 9, 2, 6, ["애니메이션", "판타지"]),
-        m(40, "세븐", 1995, 1, 6, 7, ["범죄", "드라마"]),
-        m(41, "퀸카로 살아남는 법", 2004, 8, 5, 3, ["코미디"]),
-        m(42, "올드보이", 2003, 1, 9, 8, ["액션", "미스터리"]),
-        m(43, "그녀 (Her)", 2013, 5, 2, 9, ["SF", "로맨스"]),
-        m(44, "다이 하드", 1988, 5, 9, 4, ["액션"]),
-        m(45, "오만과 편견", 2005, 7, 3, 6, ["로맨스", "드라마"]),
-        m(46, "라따뚜이", 2007, 9, 6, 5, ["애니메이션"]),
-        m(47, "소셜 네트워크", 2010, 5, 6, 7, ["전기", "드라마"]),
-        m(48, "인사이드 아웃", 2015, 8, 6, 8, ["애니메이션", "가족"]),
-        m(49, "엑스 마키나", 2014, 4, 5, 9, ["SF", "스릴러"]),
-        m(50, "다 큰 녀석들", 2010, 8, 4, 1, ["코미디"]),
-      ];
-      
-      const FILLER_GENRES = ["액션", "코미디", "드라마", "공포", "SF", "로맨스", "인디"];
-      const generateFillers = () => {
-        const fillers = [];
-        for (let i = 51; i <= 200; i++) {
-          const x = Math.floor(Math.random() * 10) + 1;
-          const y = Math.floor(Math.random() * 10) + 1;
-          const z = Math.floor(Math.random() * 10) + 1;
-          const genre = FILLER_GENRES[Math.floor(Math.random() * FILLER_GENRES.length)];
-          fillers.push({
-            id: i,
-            title: `아카이브 선정작 #${i}`,
-            year: 2000 + Math.floor(Math.random() * 24),
-            genres: [genre],
-            vector: { x, y, z }
-          });
-        }
-        return fillers;
-      };
-      
-      const MOVIES = [...REAL_MOVIES, ...generateFillers()];
-
-      // --- COMPONENT: PreferenceSlider ---
-      const PreferenceSlider = ({ label, value, onChange, minLabel, maxLabel, description, colorClass }) => {
-        return (
-          <div className="mb-8 p-6 bg-gray-800 rounded-xl border border-gray-700 shadow-lg">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold text-white">{label}</h3>
-              <span className={`text-xl font-bold ${colorClass}`}>{value}</span>
-            </div>
-            <p className="text-gray-400 text-sm mb-4">{description}</p>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              step="0.5"
-              value={value}
-              onChange={(e) => onChange(parseFloat(e.target.value))}
-              className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-            <div className="flex justify-between mt-2 text-xs text-gray-500 font-medium uppercase tracking-wider">
-              <span>{minLabel}</span>
-              <span>{maxLabel}</span>
-            </div>
-          </div>
-        );
-      };
-
-      // --- APP ---
-      const App = () => {
-        const [tone, setTone] = useState(5);
-        const [intensity, setIntensity] = useState(5);
-        const [complexity, setComplexity] = useState(5);
-        const [recommendations, setRecommendations] = useState([]);
-
-        const sortedMovies = useMemo(() => {
-          const userVec = { x: tone, y: intensity, z: complexity };
-          const scored = MOVIES.map(movie => {
-            const sim = cosineSimilarity(userVec, movie.vector);
-            return { ...movie, similarity: sim };
-          });
-          scored.sort((a, b) => b.similarity - a.similarity);
-          return scored;
-        }, [tone, intensity, complexity]);
-
-        useEffect(() => {
-          setRecommendations(sortedMovies.slice(0, 5));
-        }, [sortedMovies]);
-
-        return (
-          <div className="min-h-screen bg-[#0f1014] text-white selection:bg-indigo-500 selection:text-white pb-20">
-            <header className="border-b border-gray-800 bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-50">
-              <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <Film className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="font-bold text-xl tracking-tight">CineMatch<span className="text-indigo-400">AI</span></span>
-                </div>
-                <a href="https://github.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                  <Github className="w-6 h-6" />
-                </a>
-              </div>
-            </header>
-
-            <main className="max-w-6xl mx-auto px-6 mt-10">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                <div className="lg:col-span-4 space-y-2">
-                  <div className="mb-6">
-                    <h1 className="text-3xl font-bold mb-2">나만의 영화 찾기</h1>
-                    <p className="text-gray-400 leading-relaxed word-keep-all">
-                      아래의 슬라이더를 조절하여 당신의 현재 기분을 설정하세요. 
-                      <span className="text-indigo-400 font-mono mx-1 font-bold">코사인 유사도(Cosine Similarity)</span> 
-                      알고리즘이 당신의 취향과 가장 가까운 영화를 데이터베이스에서 찾아냅니다.
-                    </p>
-                  </div>
-
-                  <PreferenceSlider
-                    label="분위기 (Tone)"
-                    value={tone}
-                    onChange={setTone}
-                    minLabel="어두움 / 진지함"
-                    maxLabel="밝음 / 행복함"
-                    description="느와르 같은 어두움부터 뮤지컬 같은 밝음까지."
-                    colorClass="text-blue-400"
-                  />
-
-                  <PreferenceSlider
-                    label="강렬함 (Intensity)"
-                    value={intensity}
-                    onChange={setIntensity}
-                    minLabel="잔잔함 / 느림"
-                    maxLabel="강렬함 / 빠름"
-                    description="명상적인 느린 호흡부터 숨 쉴 틈 없는 액션까지."
-                    colorClass="text-red-400"
-                  />
-
-                  <PreferenceSlider
-                    label="복잡성 (Complexity)"
-                    value={complexity}
-                    onChange={setComplexity}
-                    minLabel="단순함 / 킬링타임"
-                    maxLabel="복잡함 / 예술적"
-                    description="가볍게 즐기는 팝콘 무비부터 생각하게 만드는 영화까지."
-                    colorClass="text-green-400"
-                  />
-                  
-                  <div className="bg-indigo-900/20 border border-indigo-500/30 p-4 rounded-lg flex gap-3 items-start">
-                    <Info className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-indigo-200/80 word-keep-all">
-                      <span className="font-semibold text-indigo-300">작동 원리:</span> 사용자의 설정값은 3차원 공간의 벡터가 됩니다. 이 벡터와 영화들의 벡터 사이의 각도를 계산(내적)하여 가장 유사한 작품을 추천합니다.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-8 space-y-8">
-                  <section>
-                    <h2 className="text-xl font-bold flex items-center gap-2 mb-6">
-                      <Brain className="w-5 h-5 text-pink-400" />
-                      추천 영화 TOP 5
-                    </h2>
-                    
-                    <div className="grid gap-4">
-                      {recommendations.map((movie, idx) => (
-                        <div 
-                          key={movie.id} 
-                          className="group relative bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-indigo-500/50 rounded-xl p-5 transition-all duration-300 flex items-center justify-between overflow-hidden"
-                        >
-                          <div 
-                            className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-indigo-500/10 to-transparent transition-all duration-500" 
-                            style={{ width: `${(movie.similarity || 0) * 100}%` }} 
-                          />
-
-                          <div className="relative z-10 flex items-center gap-6">
-                            <div className="flex flex-col items-center justify-center w-12 h-12 bg-gray-900 rounded-lg border border-gray-700 group-hover:border-indigo-500/50 group-hover:text-indigo-400 font-mono font-bold text-lg transition-colors">
-                              #{idx + 1}
-                            </div>
-                            
-                            <div>
-                              <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
-                                {movie.title}
-                                <span className="ml-3 text-sm font-normal text-gray-500 bg-gray-900 px-2 py-0.5 rounded-full border border-gray-700">
-                                  {movie.year}
-                                </span>
-                              </h3>
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                {movie.genres.map(g => (
-                                  <span key={g} className="text-xs font-medium text-gray-400 px-2 py-0.5 rounded bg-gray-700/50">
-                                    {g}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="relative z-10 text-right">
-                            <div className="text-sm text-gray-400 uppercase tracking-wider font-semibold text-[10px] mb-1">일치도 (Similarity)</div>
-                            <div className="text-2xl font-bold text-white font-mono">
-                              {((movie.similarity || 0) * 100).toFixed(1)}%
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                </div>
-              </div>
-            </main>
-          </div>
-        );
-      };
-
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<App />);
-    </script>
-</body>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>
