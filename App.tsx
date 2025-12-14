@@ -3,8 +3,8 @@ import { Sparkles, Clapperboard, RefreshCw } from 'lucide-react';
 import { Vector3, Movie } from './types';
 import { MOVIES } from './data/movies';
 import { cosineSimilarity } from './utils/math';
-import { PreferenceSlider } from './components/PreferenceSlider';
-import { MovieCard } from './components/MovieCard';
+import PreferenceSlider from './components/PreferenceSlider';
+import MovieCard from './components/MovieCard';
 
 const App: React.FC = () => {
   const [tone, setTone] = useState<number>(5.5);
