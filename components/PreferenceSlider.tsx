@@ -1,46 +1,61 @@
-import React from 'react';
+import { Movie } from '../types';
 
-interface PreferenceSliderProps {
-  label: string;
-  value: number;
-  onChange: (val: number) => void;
-  minLabel: string;
-  maxLabel: string;
-  description: string;
-  colorClass: string;
-}
+// Helper to create a movie
+const m = (id: number, title: string, year: number, x: number, y: number, z: number, genres: string[]): Movie => ({
+  id, title, year, vector: { x, y, z }, genres
+});
 
-export const PreferenceSlider: React.FC<PreferenceSliderProps> = ({
-  label,
-  value,
-  onChange,
-  minLabel,
-  maxLabel,
-  description,
-  colorClass
-}) => {
-  return (
-    <div className="mb-8 p-6 bg-gray-800 rounded-xl border border-gray-700 shadow-lg">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-semibold text-white">{label}</h3>
-        <span className={`text-xl font-bold ${colorClass}`}>{value}</span>
-      </div>
-      <p className="text-gray-400 text-sm mb-4">{description}</p>
-      
-      <input
-        type="range"
-        min="1"
-        max="10"
-        step="0.5"
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-      />
-      
-      <div className="flex justify-between mt-2 text-xs text-gray-500 font-medium uppercase tracking-wider">
-        <span>{minLabel}</span>
-        <span>{maxLabel}</span>
-      </div>
-    </div>
-  );
-};
+// Curated list of 50 iconic movies
+// Vector: x=Tone (Dark->Light), y=Intensity (Calm->Intense), z=Complexity (Simple->Complex)
+export const MOVIES: Movie[] = [
+  m(1, "그랜드 부다페스트 호텔", 2014, 8, 6, 7, ["코미디", "드라마"]),
+  m(2, "매드맥스: 분노의 도로", 2015, 4, 10, 5, ["액션", "SF"]),
+  m(3, "컨택트 (Arrival)", 2016, 5, 4, 9, ["SF", "드라마"]),
+  m(4, "패딩턴 2", 2017, 10, 6, 4, ["가족", "코미디"]),
+  m(5, "조커", 2019, 1, 7, 6, ["드라마", "범죄"]),
+  m(6, "기생충", 2019, 3, 7, 9, ["스릴러", "드라마"]),
+  m(7, "어벤져스: 엔드게임", 2019, 6, 9, 5, ["액션", "SF"]),
+  m(8, "라라랜드", 2016, 7, 6, 6, ["로맨스", "뮤지컬"]),
+  m(9, "쉰들러 리스트", 1993, 1, 3, 8, ["전기", "역사"]),
+  m(10, "펄프 픽션", 1994, 4, 7, 8, ["범죄", "드라마"]),
+  m(11, "센과 치히로의 행방불명", 2001, 7, 5, 8, ["애니메이션", "판타지"]),
+  m(12, "다크 나이트", 2008, 2, 9, 7, ["액션", "범죄"]),
+  m(13, "포레스트 검프", 1994, 8, 5, 5, ["드라마", "로맨스"]),
+  m(14, "인셉션", 2010, 4, 8, 10, ["SF", "액션"]),
+  m(15, "행오버", 2009, 8, 7, 2, ["코미디"]),
+  m(16, "겟 아웃", 2017, 3, 7, 8, ["공포", "미스터리"]),
+  m(17, "토이 스토리", 1995, 9, 6, 3, ["애니메이션", "가족"]),
+  m(18, "매트릭스", 1999, 3, 9, 8, ["SF", "액션"]),
+  m(19, "이터널 선샤인", 2004, 5, 4, 10, ["로맨스", "SF"]),
+  m(20, "존 윅", 2014, 3, 9, 3, ["액션", "스릴러"]),
+  m(21, "비포 선라이즈", 1995, 7, 2, 8, ["로맨스", "드라마"]),
+  m(22, "블레이드 러너 2049", 2017, 2, 5, 9, ["SF", "미스터리"]),
+  m(23, "나이브스 아웃", 2019, 6, 6, 7, ["미스터리", "코미디"]),
+  m(24, "유전", 2018, 1, 5, 8, ["공포", "드라마"]),
+  m(25, "업 (Up)", 2009, 8, 6, 5, ["애니메이션", "모험"]),
+  m(26, "문라이트", 2016, 4, 3, 9, ["드라마"]),
+  m(27, "듄", 2021, 3, 6, 8, ["SF", "모험"]),
+  m(28, "슈퍼배드", 2007, 8, 6, 3, ["코미디"]),
+  m(29, "콰이어트 플레이스", 2018, 3, 8, 5, ["공포", "SF"]),
+  m(30, "인터스텔라", 2014, 5, 7, 9, ["SF", "모험"]),
+  m(31, "코코", 2017, 8, 6, 6, ["애니메이션", "판타지"]),
+  m(32, "파이트 클럽", 1999, 2, 8, 8, ["드라마"]),
+  m(33, "금발이 너무해", 2001, 9, 5, 3, ["코미디", "로맨스"]),
+  m(34, "샤이닝", 1980, 2, 6, 8, ["공포"]),
+  m(35, "타이타닉", 1997, 5, 7, 5, ["로맨스", "드라마"]),
+  m(36, "좋은 친구들", 1990, 3, 7, 7, ["전기", "범죄"]),
+  m(37, "아멜리에", 2001, 9, 4, 7, ["코미디", "로맨스"]),
+  m(38, "위플래쉬", 2014, 3, 9, 7, ["드라마", "음악"]),
+  m(39, "이웃집 토토로", 1988, 9, 2, 6, ["애니메이션", "판타지"]),
+  m(40, "세븐", 1995, 1, 6, 7, ["범죄", "드라마"]),
+  m(41, "퀸카로 살아남는 법", 2004, 8, 5, 3, ["코미디"]),
+  m(42, "올드보이", 2003, 1, 9, 8, ["액션", "미스터리"]),
+  m(43, "그녀 (Her)", 2013, 5, 2, 9, ["SF", "로맨스"]),
+  m(44, "다이 하드", 1988, 5, 9, 4, ["액션"]),
+  m(45, "오만과 편견", 2005, 7, 3, 6, ["로맨스", "드라마"]),
+  m(46, "라따뚜이", 2007, 9, 6, 5, ["애니메이션"]),
+  m(47, "소셜 네트워크", 2010, 5, 6, 7, ["전기", "드라마"]),
+  m(48, "인사이드 아웃", 2015, 8, 6, 8, ["애니메이션", "가족"]),
+  m(49, "엑스 마키나", 2014, 4, 5, 9, ["SF", "스릴러"]),
+  m(50, "다 큰 녀석들", 2010, 8, 4, 1, ["코미디"]),
+];
