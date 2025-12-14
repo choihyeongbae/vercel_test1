@@ -1,14 +1,14 @@
 import React from 'react';
 import { Movie } from '../types';
-import { PlayCircle, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 
 interface MovieCardProps {
   movie: Movie;
   rank: number;
 }
 
-export const MovieCard: React.FC<MovieCardProps> = ({ movie, rank }) => {
-  // Generate a dynamic gradient based on the movie ID (just for visual variety)
+const MovieCard: React.FC<MovieCardProps> = ({ movie, rank }) => {
+  // Generate a dynamic gradient based on the movie ID
   const getGradient = (id: number) => {
     const gradients = [
       'from-purple-500 to-indigo-600',
@@ -66,3 +66,5 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, rank }) => {
     </div>
   );
 };
+
+export default MovieCard;
