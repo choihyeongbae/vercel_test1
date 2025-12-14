@@ -1,13 +1,13 @@
 import { Movie } from '../types';
 
-// Helper to create a movie quickly
+// Helper to create a movie
 const m = (id: number, title: string, year: number, x: number, y: number, z: number, genres: string[]): Movie => ({
   id, title, year, vector: { x, y, z }, genres
 });
 
-// Real data sample (approx 50) covering the spectrum
-// Vector: x=Tone (0-10, Dark->Light), y=Intensity (0-10, Calm->Intense), z=Complexity (0-10, Simple->Complex)
-const REAL_MOVIES: Movie[] = [
+// Curated list of 50 iconic movies
+// Vector: x=Tone (Dark->Light), y=Intensity (Calm->Intense), z=Complexity (Simple->Complex)
+export const MOVIES: Movie[] = [
   m(1, "그랜드 부다페스트 호텔", 2014, 8, 6, 7, ["코미디", "드라마"]),
   m(2, "매드맥스: 분노의 도로", 2015, 4, 10, 5, ["액션", "SF"]),
   m(3, "컨택트 (Arrival)", 2016, 5, 4, 9, ["SF", "드라마"]),
@@ -59,27 +59,3 @@ const REAL_MOVIES: Movie[] = [
   m(49, "엑스 마키나", 2014, 4, 5, 9, ["SF", "스릴러"]),
   m(50, "다 큰 녀석들", 2010, 8, 4, 1, ["코미디"]),
 ];
-
-// Algorithmic filler to reach ~200 movies
-// We generate plausible variations to fill the vector space
-const FILLER_GENRES = ["액션", "코미디", "드라마", "공포", "SF", "로맨스", "인디"];
-const generateFillers = (): Movie[] => {
-  const fillers: Movie[] = [];
-  for (let i = 51; i <= 200; i++) {
-    const x = Math.floor(Math.random() * 10) + 1;
-    const y = Math.floor(Math.random() * 10) + 1;
-    const z = Math.floor(Math.random() * 10) + 1;
-    const genre = FILLER_GENRES[Math.floor(Math.random() * FILLER_GENRES.length)];
-    
-    fillers.push({
-      id: i,
-      title: `아카이브 선정작 #${i}`,
-      year: 2000 + Math.floor(Math.random() * 24),
-      genres: [genre],
-      vector: { x, y, z }
-    });
-  }
-  return fillers;
-};
-
-export const MOVIES: Movie[] = [...REAL_MOVIES, ...generateFillers()];
